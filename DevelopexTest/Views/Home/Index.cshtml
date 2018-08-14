@@ -5,11 +5,29 @@
 </div>
 <div class="row">
     <div class="col-md-4">
-        <h2>Getting started</h2>
-        <p>ASP.NET Web API is a framework that makes it easy to build HTTP services that reach
-        a broad range of clients, including browsers and mobile devices. ASP.NET Web API
-        is an ideal platform for building RESTful applications on the .NET Framework.</p>
-        <p><a class="btn btn-default" href="https://go.microsoft.com/fwlink/?LinkId=301870">Learn more &raquo;</a></p>
+        <form id="search-form" class="form-horizontal" action="api/search" method="post">
+            <div class="form-group">
+                <label class="control-label">Start URL</label>
+                <input class="form-control" name="StartUrl" type="text">
+            </div>
+            <div class="form-group">
+                <label class="control-label">Max threads count</label>
+                <input class="form-control" name="MaxThreadsCount" type="text">
+            </div>
+            <div class="form-group">
+                <label class="control-label">Text to search</label>
+                <input class="form-control" name="TextToSearch" type="text">
+            </div>
+            <div class="form-group">
+                <label class="control-label">Max URLs count</label>
+                <input class="form-control" name="MaxUrlsCount" type="text">
+            </div>
+
+            <div class="form-group">
+                <input class="btn" type="submit" id="search-btn">
+            </div>
+
+        </form>
     </div>
     <div class="col-md-4">
         <h2>Get more libraries</h2>
