@@ -6,6 +6,8 @@
 <div class="row">
     <div class="col-md-4">
         <form id="search-form" class="form-horizontal" action="api/search" method="post">
+            <input id="guid" type="hidden" name="Guid" value="@Guid.NewGuid()" />
+
             <div class="form-group">
                 <label class="control-label">Start URL</label>
                 <input class="form-control" name="StartUrl" type="text">

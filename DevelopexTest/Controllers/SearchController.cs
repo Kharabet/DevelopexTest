@@ -1,12 +1,16 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Web.Http;
 using DevelopexTest.Models;
+using DevelopexTest.SignalR;
+using Microsoft.AspNet.SignalR;
 
 namespace DevelopexTest.Controllers
 {
@@ -28,11 +32,35 @@ namespace DevelopexTest.Controllers
         public void Post(SearchRequest request)
         {
 
-            var startPage = new WebPage(request.StartUrl);
-            startPage.Scan();
+            ProgressHolder progressHolder = new ProgressHolder(GlobalHost.ConnectionManager.GetHubContext<SearchHub>().Clients);
 
+            BlockingCollection<string> inputQueue = new BlockingCollection<string>() { request.StartUrl };
 
+            BlockingCollection<string> queue = new BlockingCollection<string>();
+            int linkCounter = 1;
 
+            var producers = Enumerable.Range(0, request.MaxThreadsCount)
+        .Select(_ => Task.Run(() =>
+        {
+            foreach (var link in inputQueue.GetConsumingEnumerable())
+            {
+                var webPage = new WebPage(link, request.TextToSearch);
+                webPage.Scan();
+                if (linkCounter < request.MaxUrlsCount)
+                {
+                    foreach (var innerLink in webPage.InnerLinks)
+                    {
+                        if (linkCounter >= request.MaxUrlsCount)
+                        {
+                            break;
+                        }
+                        inputQueue.Add(innerLink);
+                        linkCounter++;
+                    }
+                }
+            }
+        }))
+        .ToArray();
             /* First approach
              * 
              * 

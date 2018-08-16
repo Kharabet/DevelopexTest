@@ -4,6 +4,8 @@ namespace DevelopexTest.Models
 {
     public class SearchRequest
     {
+        public string Guid { get; set; }
+
         public string StartUrl { get; set; }
 
         public int MaxThreadsCount { get; set; }

@@ -5,6 +5,7 @@ using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
+using System.Web.UI;
 
 namespace DevelopexTest.Models
 {
@@ -19,16 +20,18 @@ namespace DevelopexTest.Models
 
     public class WebPage
     {
-        public ScanningStatus Status { get; set; }
-
-        string _content;
         string _text;
         string _link;
-        int _countMatches;
 
-        public WebPage(string link)
+        public int CountMatches { get; private set; }
+        public ScanningStatus Status { get; private set; }
+        public string Content { get; private set; }
+        public List<string> InnerLinks { get; private set; }
+        
+        public WebPage(string link, string text)
         {
             _link = link;
+            _text = text;
         }
 
         public void Scan()
@@ -36,9 +39,11 @@ namespace DevelopexTest.Models
             Status = ScanningStatus.InProgress;
             try
             {
-                SearchForLinks();
-                _countMatches = CountMatches();
-                Status = _countMatches == 0 ? ScanningStatus.NotFound : ScanningStatus.Finded;
+                var html = DownloadContent();
+                SearchForLinks(html);
+                ExtractContent(html);
+                CountMatches = TextCountMatches();
+                Status = CountMatches == 0 ? ScanningStatus.NotFound : ScanningStatus.Finded;
             }
             catch (Exception e)
             {
@@ -47,24 +52,33 @@ namespace DevelopexTest.Models
 
         }
 
-        void SearchForLinks()
+        string DownloadContent()
         {
-             WebClient client = new WebClient { Encoding = Encoding.UTF8 };
+            WebClient client = new WebClient { Encoding = Encoding.UTF8 };
 
             // Download string.
-             _content = client.DownloadString(_link);
-
-
-            string urlPattern = @"http(s)?://([\w-]+.)+[\w-]+(/[\w- ./?%&=])?";
-
-            var links = Regex.Matches(_content, urlPattern).Cast<string>().ToList();
-
+            return client.DownloadString(_link);
         }
 
-        public int CountMatches()
+        void ExtractContent(string html)
         {
-            var contentText = Regex.Replace(_content, @"<.*?>", "").Trim();
-            var matches = Regex.Matches(contentText, _text).Count;
+            var singleline = Regex.Replace(html, @"\r|\n", "").Trim();
+            Content = Regex.Replace(singleline, @"<.*?>|<(script|style).*?</\1>", "", RegexOptions.Multiline).Trim();
+        }
+
+        void SearchForLinks(string html)
+        {
+
+            string urlPattern = "<a.*?href=(\"|\')(http\\w?://.+?)(\"|\').*?>";
+
+            var matchCollection = Regex.Matches(html, urlPattern);
+            InnerLinks = matchCollection.Cast<Match>().Select(match => match.Groups[2].Value).Distinct().ToList();
+        }
+
+        public int TextCountMatches()
+        {
+
+            var matches = Regex.Matches(Content, _text).Count;
             return matches > 0 ? matches : 0;
         }
 
