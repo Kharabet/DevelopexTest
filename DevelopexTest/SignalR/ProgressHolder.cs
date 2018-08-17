@@ -9,74 +9,74 @@ using Microsoft.AspNet.SignalR.Hubs;
 
 namespace DevelopexTest.SignalR
 {
-    public class ProgressHolder
-    {
-        private readonly ConcurrentDictionary<string, WebPage> _webPages = new ConcurrentDictionary<string, WebPage>();
+    //public class ProgressHolder
+    //{
+    //    private readonly ConcurrentDictionary<string, WebPage> _webPages = new ConcurrentDictionary<string, WebPage>();
 
-        private readonly object _updateStockPricesLock = new object();
-        private readonly TimeSpan _updateInterval = TimeSpan.FromMilliseconds(250);
+    //    private readonly object _updateStockPricesLock = new object();
+    //    private readonly TimeSpan _updateInterval = TimeSpan.FromMilliseconds(250);
 
-        private readonly Timer _timer;
-        private volatile bool _updatingStockPrices = false;
-
-
-        private IHubConnectionContext<dynamic> Clients
-        {
-            get;
-            set;
-        }
+    //    private readonly Timer _timer;
+    //    private volatile bool _updatingStockPrices = false;
 
 
-        public ProgressHolder(IHubConnectionContext<dynamic> clients)
-        {
-            Clients = clients;
+    //    private IHubConnectionContext<dynamic> Clients
+    //    {
+    //        get;
+    //        set;
+    //    }
 
-            _webPages.Clear();
-            var stocks = new List<Stock>
-            {
-                new Stock { Symbol = "MSFT", Price = 30.31m },
-                new Stock { Symbol = "APPL", Price = 578.18m },
-                new Stock { Symbol = "GOOG", Price = 570.30m }
-            };
-            stocks.ForEach(stock => _webPages.TryAdd(stock.Symbol, stock));
 
-            _timer = new Timer(UpdateStockPrices, null, _updateInterval, _updateInterval);
+    //    public ProgressHolder(IHubConnectionContext<dynamic> clients)
+    //    {
+    //        Clients = clients;
 
-        }
+    //        _webPages.Clear();
+    //        var stocks = new List<Stock>
+    //        {
+    //            new Stock { Symbol = "MSFT", Price = 30.31m },
+    //            new Stock { Symbol = "APPL", Price = 578.18m },
+    //            new Stock { Symbol = "GOOG", Price = 570.30m }
+    //        };
+    //        stocks.ForEach(stock => _webPages.TryAdd(stock.Symbol, stock));
 
-        public IEnumerable<WebPage> GetAllStocks()
-        {
-            return _webPages.Values;
-        }
+    //        _timer = new Timer(UpdateStockPrices, null, _updateInterval, _updateInterval);
 
-        private void UpdateStockPrices(object state)
-        {
-            lock (_updateStockPricesLock)
-            {
-                if (!_updatingStockPrices)
-                {
-                    _updatingStockPrices = true;
+    //    }
 
-                    foreach (var stock in _webPages.Values)
-                    {
-                        if (TryUpdateStockPrice(stock))
-                        {
-                            BroadcastStockPrice(stock);
-                        }
-                    }
+    //    public IEnumerable<WebPage> GetAllStocks()
+    //    {
+    //        return _webPages.Values;
+    //    }
 
-                    _updatingStockPrices = false;
-                }
-            }
-        }
+    //    private void UpdateStockPrices(object state)
+    //    {
+    //        lock (_updateStockPricesLock)
+    //        {
+    //            if (!_updatingStockPrices)
+    //            {
+    //                _updatingStockPrices = true;
 
-        private bool TryUpdateStockPrice(WebPage stock)
-        {
-        }
+    //                foreach (var stock in _webPages.Values)
+    //                {
+    //                    if (TryUpdateStockPrice(stock))
+    //                    {
+    //                        BroadcastStockPrice(stock);
+    //                    }
+    //                }
 
-        private void BroadcastStockPrice(WebPage stock)
-        {
-            Clients.All.updateStockPrice(stock);
-        }
-    }
+    //                _updatingStockPrices = false;
+    //            }
+    //        }
+    //    }
+
+    //    private bool TryUpdateStockPrice(WebPage stock)
+    //    {
+    //    }
+
+    //    private void BroadcastStockPrice(WebPage stock)
+    //    {
+    //        Clients.All.updateStockPrice(stock);
+    //    }
+    //}
 }

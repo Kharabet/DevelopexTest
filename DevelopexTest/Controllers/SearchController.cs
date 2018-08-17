@@ -32,7 +32,6 @@ namespace DevelopexTest.Controllers
         public void Post(SearchRequest request)
         {
 
-            ProgressHolder progressHolder = new ProgressHolder(GlobalHost.ConnectionManager.GetHubContext<SearchHub>().Clients);
 
             BlockingCollection<string> inputQueue = new BlockingCollection<string>() { request.StartUrl };
 
@@ -45,7 +44,11 @@ namespace DevelopexTest.Controllers
             foreach (var link in inputQueue.GetConsumingEnumerable())
             {
                 var webPage = new WebPage(link, request.TextToSearch);
+                EventBus.Instance.PostEvent(new OnProgressChangedEvent((int)webPage.Status, request.Guid, link ));
                 webPage.Scan();
+                EventBus.Instance.PostEvent(new OnProgressChangedEvent((int)webPage.Status, request.Guid, link));
+
+
                 if (linkCounter < request.MaxUrlsCount)
                 {
                     foreach (var innerLink in webPage.InnerLinks)
@@ -59,8 +62,10 @@ namespace DevelopexTest.Controllers
                     }
                 }
             }
+            Dispose();
         }))
         .ToArray();
+
             /* First approach
              * 
              * 

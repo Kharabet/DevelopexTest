@@ -40,11 +40,14 @@ $(function () {
 
     // Start the connection
     var connection = $.hubConnection();
-    var contosoChatHubProxy = connection.createHubProxy('searchHub');
+    var searchHubProxy = connection.createHubProxy('searchHub');
     connection.qs = {"guid": $("#guid").val()}
     connection.start();
-    contosoChatHubProxy.on("addChatMessage", function () {
+    searchHubProxy.on("hello", function () {
         alert("signalR!");
+    });
+    searchHubProxy.on("addChatMessage", function (message) {
+        alert(message);
     });
 
 });

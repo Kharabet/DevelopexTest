@@ -217,6 +217,7 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Models\Algorithms.cs" />
+    <Compile Include="Models\EventBus.cs" />
     <Compile Include="Models\Graph.cs" />
     <Compile Include="Models\Parser.cs" />
     <Compile Include="Models\SearchRequest.cs" />
