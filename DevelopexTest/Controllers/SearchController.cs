@@ -44,23 +44,31 @@ namespace DevelopexTest.Controllers
             foreach (var link in inputQueue.GetConsumingEnumerable())
             {
                 var webPage = new WebPage(link, request.TextToSearch);
-                EventBus.Instance.PostEvent(new OnProgressChangedEvent((int)webPage.Status, request.Guid, link ));
-                webPage.Scan();
-                EventBus.Instance.PostEvent(new OnProgressChangedEvent((int)webPage.Status, request.Guid, link));
-
-
-                if (linkCounter < request.MaxUrlsCount)
+                EventBus.Instance.PostEvent(new OnProgressChangedEvent((int)ScanningStatus.InProgress, request.Guid, link));
+                try
                 {
-                    foreach (var innerLink in webPage.InnerLinks)
+                    webPage.Scan();
+                    EventBus.Instance.PostEvent(new OnProgressChangedEvent((int)webPage.Status, request.Guid, link));
+                    if (linkCounter < request.MaxUrlsCount)
                     {
-                        if (linkCounter >= request.MaxUrlsCount)
+                        foreach (var innerLink in webPage.InnerLinks)
                         {
-                            break;
+                            if (linkCounter >= request.MaxUrlsCount)
+                            {
+                                break;
+                            }
+                            inputQueue.Add(innerLink);
+                            linkCounter++;
                         }
-                        inputQueue.Add(innerLink);
-                        linkCounter++;
                     }
+
                 }
+                catch (Exception e)
+                {
+                    EventBus.Instance.PostEvent(new OnProgressChangedEvent((int)webPage.Status, request.Guid, link, e.Message));
+                }
+
+
             }
             Dispose();
         }))

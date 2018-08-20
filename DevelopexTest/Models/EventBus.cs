@@ -32,8 +32,34 @@ namespace DevelopexTest.Models
 
         private List<EventListenerWrapper> listeners = new List<EventListenerWrapper>();
 
-        private class EventListenerWrapper
+        private class EventListenerWrapper : IEquatable<EventListenerWrapper>
         {
+            public bool Equals(EventListenerWrapper other)
+            {
+                if (ReferenceEquals(null, other)) return false;
+                if (ReferenceEquals(this, other)) return true;
+                return Equals(method, other.method) && Equals(Listener, other.Listener) && Equals(EventType, other.EventType);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((EventListenerWrapper) obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    var hashCode = (method != null ? method.GetHashCode() : 0);
+                    hashCode = (hashCode*397) ^ (Listener != null ? Listener.GetHashCode() : 0);
+                    hashCode = (hashCode*397) ^ (EventType != null ? EventType.GetHashCode() : 0);
+                    return hashCode;
+                }
+            }
+
             public object Listener { get; private set; }
             public Type EventType { get; private set; }
 

@@ -20,8 +20,8 @@ namespace DevelopexTest.Models
 
     public class WebPage
     {
-        string _text;
-        string _link;
+        readonly string _text;
+        readonly string _link;
 
         public int CountMatches { get; private set; }
         public ScanningStatus Status { get; private set; }
@@ -48,6 +48,7 @@ namespace DevelopexTest.Models
             catch (Exception e)
             {
                 Status = ScanningStatus.Error;
+                throw;
             }
 
         }
@@ -55,15 +56,16 @@ namespace DevelopexTest.Models
         string DownloadContent()
         {
             WebClient client = new WebClient { Encoding = Encoding.UTF8 };
+            var html = client.DownloadString(_link);
+            var singleline = Regex.Replace(html, @"\r|\n", "").Trim();
 
             // Download string.
-            return client.DownloadString(_link);
+            return singleline;
         }
 
         void ExtractContent(string html)
         {
-            var singleline = Regex.Replace(html, @"\r|\n", "").Trim();
-            Content = Regex.Replace(singleline, @"<.*?>|<(script|style).*?</\1>", "", RegexOptions.Multiline).Trim();
+            Content = Regex.Replace(html, @"<(script|style).*?</\1>|<.*?>", "", RegexOptions.Multiline).Trim();
         }
 
         void SearchForLinks(string html)
@@ -78,7 +80,7 @@ namespace DevelopexTest.Models
         public int TextCountMatches()
         {
 
-            var matches = Regex.Matches(Content, _text).Count;
+            var matches = Regex.Matches(Content, _text, RegexOptions.IgnoreCase).Count;
             return matches > 0 ? matches : 0;
         }
 
