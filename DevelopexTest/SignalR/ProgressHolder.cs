@@ -2,81 +2,83 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using System.Web;
+using DevelopexTest.EventBus;
+using DevelopexTest.EventBus.Events;
 using DevelopexTest.Models;
-using Microsoft.AspNet.SignalR.Hubs;
 
 namespace DevelopexTest.SignalR
 {
-    //public class ProgressHolder
-    //{
-    //    private readonly ConcurrentDictionary<string, WebPage> _webPages = new ConcurrentDictionary<string, WebPage>();
+    public class ProgressHolder: ITestProgressHolder
+    {
+        private SearchHub _hub;
+        private static ConcurrentDictionary<string, List<Type>> _userGuidToEventDictionary = new ConcurrentDictionary<string, List<Type>>();
+        private static List<SubscriptionToken> eventsList = new List<SubscriptionToken>();
 
-    //    private readonly object _updateStockPricesLock = new object();
-    //    private readonly TimeSpan _updateInterval = TimeSpan.FromMilliseconds(250);
+        public ProgressHolder(SearchHub hub)
+        {
+            _hub = hub;
+        }
 
-    //    private readonly Timer _timer;
-    //    private volatile bool _updatingStockPrices = false;
+        public void Add(string guid, Type eventType)
+        {
+            if (eventsList.Count(x => x.EventItemType == eventType) == 0)
+            {
+                Subscribe(eventType);
+            }
 
+            if (_userGuidToEventDictionary.ContainsKey(guid))
+            {
+                _userGuidToEventDictionary[guid].Add(eventType);
+            }
+            else
+            {
+                _userGuidToEventDictionary.TryAdd(guid, new List<Type>(){eventType});
+            }
+        }
 
-    //    private IHubConnectionContext<dynamic> Clients
-    //    {
-    //        get;
-    //        set;
-    //    }
+        public void Subscribe(Type eventType)
+        {
+            if (eventType == typeof(ProgressChangedEvent))
+            {
+                var token = EventBus.EventBus.Instance.Subscribe<ProgressChangedEvent>(OnProgressChangedEvent);
+                eventsList.Add(token);
+            }
+            else if (eventType == typeof(ApplicationErrorEvent))
+            {
+                var token = EventBus.EventBus.Instance.Subscribe<ApplicationErrorEvent>(OnAppErrorEvent);
+                eventsList.Add(token);
+            }
+        }
 
+        private void OnProgressChangedEvent(ProgressChangedEvent eventItem)
+        {
+            List<Type> eventTypeList;
+            if (_userGuidToEventDictionary.TryGetValue(eventItem.Guid, out eventTypeList) && eventTypeList.Contains(eventItem.GetType())) 
+                _hub.OnProgressChanged(eventItem);
+        }
 
-    //    public ProgressHolder(IHubConnectionContext<dynamic> clients)
-    //    {
-    //        Clients = clients;
+        private void OnAppErrorEvent(ApplicationErrorEvent eventItem)
+        {
+            List<Type> eventTypeList;
+            if (_userGuidToEventDictionary.TryGetValue(eventItem.Guid, out eventTypeList) && eventTypeList.Contains(eventItem.GetType()))
+                _hub.OnAppError(eventItem);
+        }
+        public void Unsubscribe(Type eventType)
+        {
+            EventBus.EventBus.Instance.Unsubscribe(eventsList.Find(x => x.EventItemType == eventType));
+        }
 
-    //        _webPages.Clear();
-    //        var stocks = new List<Stock>
-    //        {
-    //            new Stock { Symbol = "MSFT", Price = 30.31m },
-    //            new Stock { Symbol = "APPL", Price = 578.18m },
-    //            new Stock { Symbol = "GOOG", Price = 570.30m }
-    //        };
-    //        stocks.ForEach(stock => _webPages.TryAdd(stock.Symbol, stock));
-
-    //        _timer = new Timer(UpdateStockPrices, null, _updateInterval, _updateInterval);
-
-    //    }
-
-    //    public IEnumerable<WebPage> GetAllStocks()
-    //    {
-    //        return _webPages.Values;
-    //    }
-
-    //    private void UpdateStockPrices(object state)
-    //    {
-    //        lock (_updateStockPricesLock)
-    //        {
-    //            if (!_updatingStockPrices)
-    //            {
-    //                _updatingStockPrices = true;
-
-    //                foreach (var stock in _webPages.Values)
-    //                {
-    //                    if (TryUpdateStockPrice(stock))
-    //                    {
-    //                        BroadcastStockPrice(stock);
-    //                    }
-    //                }
-
-    //                _updatingStockPrices = false;
-    //            }
-    //        }
-    //    }
-
-    //    private bool TryUpdateStockPrice(WebPage stock)
-    //    {
-    //    }
-
-    //    private void BroadcastStockPrice(WebPage stock)
-    //    {
-    //        Clients.All.updateStockPrice(stock);
-    //    }
-    //}
+        public void Remove(string guid)
+        {
+            List<Type> eventTypeList;
+            _userGuidToEventDictionary.TryRemove(guid, out eventTypeList);
+            foreach (var eventType in eventTypeList)
+            {
+                if (_userGuidToEventDictionary.Values.Count(x => x.Contains(eventType)) == 0)
+                {
+                    Unsubscribe(eventType);
+                }
+            }
+        }
+    }
 }

@@ -8,7 +8,11 @@ namespace DevelopexTest.Models
 {
     public class EventBus
     {
-        public static EventBus Instance { get { return instance ?? (instance = new EventBus()); } }
+        private static readonly Lazy<EventBus> _instance = new Lazy<EventBus>(() => new EventBus());
+        public static EventBus Instance
+        {
+            get { return _instance.Value; }
+        }
 
         public void Register(object listener)
         {
@@ -25,8 +29,6 @@ namespace DevelopexTest.Models
         {
             listeners.Where(l => l.EventType == e.GetType()).ToList().ForEach(l => l.PostEvent(e));
         }
-
-        private static EventBus instance;
 
         private EventBus() { }
 

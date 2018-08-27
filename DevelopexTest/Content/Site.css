@@ -1,5 +1,4 @@
 ﻿body {
-    padding-top: 50px;
     padding-bottom: 20px;
 }
 
@@ -15,19 +14,62 @@ select,
 textarea {
     max-width: 280px;
 }
+form#search-form .form-group {
+    margin-left: 0;
+}
 
 progress.search-error {
     color: red;
     background: red;
-
 }
 
     progress.search-error::-moz-progress-bar {
         background: red;
     }
 
- progress.search-error::-webkit-progress-value {
-    background: red;
+    progress.search-error::-webkit-progress-value {
+        background: red;
+    }
+
+
+
+#result-table table {
+    width: 100%;
+}
+
+    #result-table table td {
+        vertical-align: middle;
+    }
+
+#result-table progress {
+    width: 90%;
+    display: block;
+    margin: 0 auto;
+}
+
+.url-col, td.url {
+    width: 40%;
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.progress-col, td.progress {
+    width: 40%;
+}
+
+.status-col, td.status {
+    width: 20%;
 }
 
 
+
+@media only screen and (max-width: 767px) {
+
+    form#search-form .form-group {
+        margin: 15px auto;
+        display: block;
+        max-width: 280px;
+    }
+}

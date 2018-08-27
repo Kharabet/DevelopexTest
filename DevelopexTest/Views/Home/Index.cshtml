@@ -1,51 +1,59 @@
-﻿<div class="jumbotron">
-    <h1>ASP.NET</h1>
-    <p class="lead">ASP.NET is a free web framework for building great Web sites and Web applications using HTML, CSS, and JavaScript.</p>
-    <p><a href="https://asp.net" class="btn btn-primary btn-lg">Learn more &raquo;</a></p>
-</div>
-<div class="row">
-    <div class="col-md-4">
-        <form id="search-form" class="form-horizontal" action="api/search" method="post">
-            <input id="guid" type="hidden" name="Guid" value="@Guid.NewGuid()" />
+﻿
 
-            <div class="form-group">
-                <label class="control-label">Start URL</label>
-                <input class="form-control" name="StartUrl" type="text">
-            </div>
-            <div class="form-group">
-                <label class="control-label">Max threads count</label>
-                <input class="form-control" name="MaxThreadsCount" type="text">
-            </div>
-            <div class="form-group">
-                <label class="control-label">Text to search</label>
-                <input class="form-control" name="TextToSearch" type="text">
-            </div>
-            <div class="form-group">
-                <label class="control-label">Max URLs count</label>
-                <input class="form-control" name="MaxUrlsCount" type="text">
-            </div>
-
-            <div class="form-group">
-                <input class="btn" type="submit" id="search-btn">
-            </div>
-
-        </form>
+<div class="container">
+    <div class="jumbotron">
+        <h1>URL Parser</h1>
+        <p class="lead">Enter input parametres and start search for specific word! Multithreading!</p>
     </div>
-    <div class="col-md-4">
-        <h2>Live Stock Table</h2>
-        <div id="stockTable">
-            <table border="1">
-                <thead>
-                    <tr><th>Url</th><th>Progress</th><th>Status</th></tr>
-                </thead>
-                <tbody>
-                    <tr class="loading"><td colspan="5">loading...</td></tr>
-                </tbody>
-            </table>
-        </div>    </div>
-    @*<div class="col-md-4">
-        <h2>Web Hosting</h2>
-        <p>You can easily find a web hosting company that offers the right mix of features and price for your applications.</p>
-        <p><a class="btn btn-default" href="https://go.microsoft.com/fwlink/?LinkId=301872">Learn more &raquo;</a></p>
-    </div>*@
+    <div class="row">
+        <div class="col-sm-6 col-xs-12">
+            <form id="search-form" class="form-horizontal" action="api/search" method="post">
+                <input id="guid" type="hidden" name="UserGuid" value="@Guid.NewGuid()"/>
+
+                <div class="form-group">
+                    <label class="control-label">Start URL</label>
+                    <input class="form-control" name="StartUrl" type="text">
+                </div>
+                <div class="form-group">
+                    <label class="control-label">Max threads count</label>
+                    <input class="form-control" name="MaxThreadsCount" type="text">
+                </div>
+                <div class="form-group">
+                    <label class="control-label">Text to search</label>
+                    <input class="form-control" name="TextToSearch" type="text">
+                </div>
+                <div class="form-group">
+                    <label class="control-label">Max URLs count</label>
+                    <input class="form-control" name="MaxUrlsCount" type="text">
+                </div>
+
+                <div class="form-group">
+                    <input class="btn" type="submit" id="search-btn" value="Search!">
+                </div>
+
+            </form>
+        </div>
+        <div class="col-sm-6 col-xs-12">
+            <h3>Search Result Table</h3>
+            <div id="result-table">
+                <div class="alert alert-danger"></div>
+                <table class="table" border="1">
+                    <thead>
+                    <tr>
+                        <th class="url-col">Url</th>
+                        <th class="progress-col">Progress</th>
+                        <th class="status-col">Status</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        @*<div class="col-md-4">
+                <h2>Web Hosting</h2>
+                <p>You can easily find a web hosting company that offers the right mix of features and price for your applications.</p>
+                <p><a class="btn btn-default" href="https://go.microsoft.com/fwlink/?LinkId=301872">Learn more &raquo;</a></p>
+            </div>*@
+    </div>
 </div>

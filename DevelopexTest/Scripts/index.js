@@ -10,6 +10,7 @@ if (!String.prototype.supplant) {
     };
 }
 
+//method for string formatting
 if (!String.prototype.format) {
     String.prototype.format = function () {
         var args = arguments;
@@ -22,23 +23,6 @@ if (!String.prototype.format) {
     };
 }
 
-var entityMap = {
-    '&': '&amp;',
-    //'<': '&lt;',
-    //'>': '&gt;',
-    //'"': '&quot;',
-    //"'": '&#39;',
-    //'/': '&#x2F;',
-    //'`': '&#x60;',
-    //'=': '&#x3D;'
-};
-
-function escapeHtml(string) {
-    return String(string).replace(/&amp\//g, function (s) {
-        return entityMap[s];
-    });
-}
-
 $(function () {
     var statuses = {
         InProgress: 1,
@@ -46,24 +30,41 @@ $(function () {
         NotFound: 3,
         Error: 4
     }
-    var ticker = $.connection.searchHub, // the generated client-side hub proxy
-        up = '▲',
-        down = '▼',
-        stockTable = $('#stockTable'),
-        rowTemplate = '<tr data-url="{url}"><td class="url">{url}</td><td><progress max="100" value="0"></progress></td><td class="status">{status}</td></tr>';
+    var resultTable = $("#result-table"),
+        rowTemplate = '<tr data-url="{url}"><td class="url"><a href="{url}">{url}</a></td><td class="progress"><progress max="100" value="0"></progress></td><td class="status">{status}</td></tr>';
 
-    // Start the connection
-    var connection = $.hubConnection();
-    var searchHubProxy = connection.createHubProxy('searchHub');
-    connection.qs = { "guid": $("#guid").val() }
-    connection.start();
+    resultTable.find(".alert").hide();
+    initSignalR();
 
-    $("#search-form").on("submit", function(e) {
-        $("#stockTable tbody").empty();
+    function initSignalR() {
+        var connection = $.hubConnection();
+        var searchHubProxy = connection.createHubProxy('searchHub');
+        connection.qs = { "guid": $("#guid").val() }
+        connection.start({ pingInterval: 20000 });
+        connection.disconnected(function () {
+            setTimeout(function () {
+                connection.start({ pingInterval: 20000 });
+                console.log("reconnected");
+            }, 5000);
+        });
+
+        searchHubProxy.on("progressChanged", onProgressChanged);
+        searchHubProxy.on("appError", onAppError);
+
+    }
+
+    $("#search-form").on("submit", function (e) {
+        resultTable.find(".alert").hide();
+
+        resultTable.find("tbody").empty();
     });
 
-    searchHubProxy.on("addChatMessage", function (urlHtml, status, errorMessage) {
-        var url = urlHtml.replace(/&amp\//g, "&");
+    function onAppError(errorMessage) {
+       resultTable.find(".alert").show().text(errorMessage);
+    }
+
+    function onProgressChanged(urlHtml, status, errorMessage) {
+        var url = urlHtml.replace(/&amp;/gi, "&").replace(/&#x3D;/gi, "=");
         if (status == statuses.InProgress) {
             var data = {
                 url: url,
@@ -79,35 +80,26 @@ $(function () {
         if (status == statuses.Error) {
             searchError(url, errorMessage);
         }
-
-
-    });
+    }
 
     function addRow(data) {
-        stockTable.find("tbody").append(rowTemplate.supplant(data));
-        var row = stockTable.find('tr[data-url="{0}"]'.format(data.url)),
+        resultTable.find("tbody").append(rowTemplate.supplant(data));
+        var row = resultTable.find('tr[data-url="{0}"]'.format(data.url)),
             rowProgress = row.find('progress');
-            rowProgress.animate({ value: 95 }, 1000);
-        //rowVal = rowProgress.val();
-
-        //while (rowVal <= 97) {
-        //    setInterval(function () {
-        //        rowProgress.val(rowVal++);
-        //    }, 100);
-        //}
+        rowProgress.animate({ value: 95 }, 1000);
     }
 
     function complete(url, status) {
-        var row = stockTable.find('tr[data-url="{0}"]'.format(url));
+        var row = resultTable.find('tr[data-url="{0}"]'.format(url));
         row.find('progress').stop(false, true).val(100);
         row.find('td.status').text(status == statuses.Finded ? "Finded" : "Not Found");
     };
 
     function searchError(url, errorMessage) {
-        var row = stockTable.find('tr[data-url="{0}"]'.format(url));
+        var row = resultTable.find('tr[data-url="{0}"]'.format(url));
         row.find('progress').stop(false, true).val(100).addClass("search-error");
         row.find('td.status').text("Error: {0}".format(errorMessage));
-
+        row.find('td.status').prop("title", errorMessage).text("Error: {0}".format(errorMessage));
 
     }
 

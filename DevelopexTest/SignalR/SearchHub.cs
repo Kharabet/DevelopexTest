@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
+using DevelopexTest.EventBus;
+using DevelopexTest.EventBus.Events;
 using DevelopexTest.Models;
 using Microsoft.AspNet.SignalR;
 using Microsoft.AspNet.SignalR.Hubs;
@@ -11,89 +14,71 @@ using Microsoft.AspNet.SignalR.Hubs;
 namespace DevelopexTest.SignalR
 {
     [HubName("searchHub")]
-    public class SearchHub : Hub, IEquatable<SearchHub>
+    public class SearchHub : Hub
     {
-        public bool Equals(SearchHub other)
+        private ITestProgressHolder _progressHolder;
+        private static readonly ConcurrentDictionary<string, string> _guidDictionary = new ConcurrentDictionary<string, string>();
+
+        public SearchHub()
         {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
-            return Equals(_guidDictionary, other._guidDictionary);
+            _progressHolder = new ProgressHolder(this);
         }
 
-        public override bool Equals(object obj)
+        public void OnAppError(ApplicationErrorEvent eventItem)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((SearchHub) obj);
+            var guid = eventItem.Guid;
+            if (!_guidDictionary.ContainsKey(guid))
+                return;
+            Clients.Client(_guidDictionary[guid]).appError(eventItem.ErrorMessage);
         }
 
-        public override int GetHashCode()
+        public void OnProgressChanged(ProgressChangedEvent eventItem)
         {
-            return (_guidDictionary != null ? _guidDictionary.GetHashCode() : 0);
-        }
-
-        //private readonly ProgressHolder _progressHolder;
-        private readonly ConcurrentDictionary<string, string> _guidDictionary = new ConcurrentDictionary<string, string>();
-
-
-        public void Hello(string guid, string url, string status, string errorMessage = null)
-        {
+            var guid = eventItem.Guid;
+            var status = eventItem.Status;
+            var url = eventItem.Url;
+            var errorMessage = eventItem.ErrorMessage;
+            
             if (!_guidDictionary.ContainsKey(guid)) 
                 return;
             
             if (string.IsNullOrEmpty(errorMessage))
             {
-                Clients.Group(guid).addChatMessage(url, status);
+                Clients.Client(_guidDictionary[guid]).progressChanged(url, status);
             }
             else
             {
-                Clients.Group(guid).addChatMessage(url, status, errorMessage);
-            }
-        }
-
-        public void OnEvent(OnProgressChangedEvent e)
-        {
-            if (string.IsNullOrEmpty(e.ErrorMessage))
-            {
-                Hello(e.Guid, e.Url, e.Status.ToString());
-            }
-            else
-            {
-                Hello(e.Guid, e.Url, e.Status.ToString(), e.ErrorMessage);
+                Clients.Client(_guidDictionary[guid]).progressChanged(url, status, errorMessage);
             }
         }
 
         public override Task OnConnected()
         {
-            EventBus.Instance.Register(this);
-
             string guid = Context.QueryString["guid"];
+
+            _progressHolder.Add(guid, typeof (ProgressChangedEvent));
+            _progressHolder.Add(guid, typeof (ApplicationErrorEvent));
             _guidDictionary.TryAdd(guid, Context.ConnectionId);
-            Groups.Add(Context.ConnectionId, guid);
+
             return base.OnConnected();
         }
 
         public override Task OnDisconnected(bool stopCalled)
         {
-            EventBus.Instance.Unregister(this);
+            var guid = _guidDictionary.FirstOrDefault(x => x.Value == Context.ConnectionId).Key;
+            if (string.IsNullOrEmpty(guid))
+            {
+                return base.OnDisconnected(stopCalled);
+            }
+            string connectionId;
+            if (_progressHolder != null)
+            {
+                _progressHolder.Remove(guid);
+            }
+
+            _guidDictionary.TryRemove(guid, out connectionId);
             return base.OnDisconnected(stopCalled);
         }
     }
 
-    public class OnProgressChangedEvent
-    {
-        public string Url { get; private set; }
-        public int Status { get; private set; }
-        public string Guid { get; private set; }
-        public string ErrorMessage { get; private set; }
-
-        public OnProgressChangedEvent(int status, string guid, string url, string errorMessage = null)
-        {
-            Status = status;
-            Guid = guid;
-            Url = url;
-            ErrorMessage = errorMessage;
-        }
-    }
 }

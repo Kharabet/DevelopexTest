@@ -4,8 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Web;
-using System.Web.UI;
+using DevelopexTest.EventBus.Events;
 
 namespace DevelopexTest.Models
 {
@@ -22,59 +21,66 @@ namespace DevelopexTest.Models
     {
         readonly string _text;
         readonly string _link;
+        readonly string _userGuid;
 
         public int CountMatches { get; private set; }
         public ScanningStatus Status { get; private set; }
         public string Content { get; private set; }
         public List<string> InnerLinks { get; private set; }
-        
-        public WebPage(string link, string text)
+
+        public WebPage(string link, string text, string userGuid)
         {
             _link = link;
             _text = text;
+            _userGuid = userGuid;
         }
 
         public void Scan()
         {
-            Status = ScanningStatus.InProgress;
+            EventBus.EventBus.Instance.Publish(CreateEvent(ScanningStatus.InProgress));
             try
             {
-                var html = DownloadContent();
-                SearchForLinks(html);
-                ExtractContent(html);
+                var html = DownloadContent(_link);
+                InnerLinks = SearchForLinks(html);
+                if (InnerLinks.Count > 0 )
+                {
+                    EventBus.EventBus.Instance.Publish(new LinksFindedEvent(_link, InnerLinks));
+                }
+                Content = ExtractContent(html);
                 CountMatches = TextCountMatches();
-                Status = CountMatches == 0 ? ScanningStatus.NotFound : ScanningStatus.Finded;
+                EventBus.EventBus.Instance.Publish(CountMatches == 0
+                    ? CreateEvent(ScanningStatus.NotFound)
+                    : CreateEvent(ScanningStatus.Finded));
             }
             catch (Exception e)
             {
-                Status = ScanningStatus.Error;
-                throw;
+                EventBus.EventBus.Instance.Publish(CreateEvent(ScanningStatus.Error, e.Message));
             }
 
         }
 
-        string DownloadContent()
+        string DownloadContent(string url)
         {
-            WebClient client = new WebClient { Encoding = Encoding.UTF8 };
-            var html = client.DownloadString(_link);
+            WebClient client = new System.Net.WebClient { Encoding = Encoding.UTF8 };
+            var html = client.DownloadString(url);
             var singleline = Regex.Replace(html, @"\r|\n", "").Trim();
 
             // Download string.
             return singleline;
         }
 
-        void ExtractContent(string html)
+        string ExtractContent(string html)
         {
-            Content = Regex.Replace(html, @"<(script|style).*?</\1>|<.*?>", "", RegexOptions.Multiline).Trim();
+            return Regex.Replace(html, @"<(script|style).*?</\1>|<.*?>", "", RegexOptions.Multiline).Trim();
         }
 
-        void SearchForLinks(string html)
+        List<string> SearchForLinks(string html)
         {
 
             string urlPattern = "<a.*?href=(\"|\')(http\\w?://.+?)(\"|\').*?>";
 
             var matchCollection = Regex.Matches(html, urlPattern);
-            InnerLinks = matchCollection.Cast<Match>().Select(match => match.Groups[2].Value).Distinct().ToList();
+            return matchCollection.Cast<Match>().Select(match => match.Groups[2].Value).Distinct().ToList();
         }
 
         public int TextCountMatches()
@@ -83,6 +89,16 @@ namespace DevelopexTest.Models
             var matches = Regex.Matches(Content, _text, RegexOptions.IgnoreCase).Count;
             return matches > 0 ? matches : 0;
         }
+
+        public ProgressChangedEvent CreateEvent(ScanningStatus status, string errorMessage = null)
+        {
+            if (!string.IsNullOrEmpty(errorMessage))
+            {
+                return new ProgressChangedEvent((int)status, _userGuid, _link, errorMessage);
+            }
+            return new ProgressChangedEvent((int)status, _userGuid, _link);
+        }
+
 
     }
 }
