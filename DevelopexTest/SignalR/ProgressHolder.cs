@@ -5,15 +5,17 @@ using System.Linq;
 using DevelopexTest.EventBus;
 using DevelopexTest.EventBus.Events;
 using DevelopexTest.Models;
+using DevelopexTest.SignalR.Hubs;
+using Microsoft.AspNet.SignalR;
 
 namespace DevelopexTest.SignalR
 {
-    public class ProgressHolder: ITestProgressHolder
+    public class ProgressHolder
     {
         private SearchHub _hub;
         private static ConcurrentDictionary<string, List<Type>> _userGuidToEventDictionary = new ConcurrentDictionary<string, List<Type>>();
         private static List<SubscriptionToken> eventsList = new List<SubscriptionToken>();
-
+        private object _lockObj = new object();
         public ProgressHolder(SearchHub hub)
         {
             _hub = hub;
@@ -21,18 +23,21 @@ namespace DevelopexTest.SignalR
 
         public void Add(string guid, Type eventType)
         {
-            if (eventsList.Count(x => x.EventItemType == eventType) == 0)
+            lock (_lockObj)
             {
-                Subscribe(eventType);
-            }
+                if (eventsList.Count(x => x.EventItemType == eventType) == 0)
+                {
+                    Subscribe(eventType);
+                }
 
-            if (_userGuidToEventDictionary.ContainsKey(guid))
-            {
-                _userGuidToEventDictionary[guid].Add(eventType);
-            }
-            else
-            {
-                _userGuidToEventDictionary.TryAdd(guid, new List<Type>(){eventType});
+                if (_userGuidToEventDictionary.ContainsKey(guid))
+                {
+                    _userGuidToEventDictionary[guid].Add(eventType);
+                }
+                else
+                {
+                    _userGuidToEventDictionary.TryAdd(guid, new List<Type>() { eventType });
+                }
             }
         }
 
@@ -53,19 +58,47 @@ namespace DevelopexTest.SignalR
         private void OnProgressChangedEvent(ProgressChangedEvent eventItem)
         {
             List<Type> eventTypeList;
-            if (_userGuidToEventDictionary.TryGetValue(eventItem.Guid, out eventTypeList) && eventTypeList.Contains(eventItem.GetType())) 
-                _hub.OnProgressChanged(eventItem);
+            if (!_userGuidToEventDictionary.TryGetValue(eventItem.Guid, out eventTypeList) ||
+                !eventTypeList.Contains(eventItem.GetType()))
+                return;
+
+            var guid = eventItem.Guid;
+            var status = eventItem.Status;
+            var url = eventItem.Url;
+            var errorMessage = eventItem.ErrorMessage;
+
+            if (!SearchHub.GuidDictionary.ContainsKey(guid))
+                return;
+            var connectionId = SearchHub.GuidDictionary[guid];
+            if (string.IsNullOrEmpty(errorMessage))
+            {
+                GlobalHost.ConnectionManager.GetHubContext<SearchHub>().Clients.Client(connectionId).progressChanged(url, status);
+            }
+            else
+            {
+                GlobalHost.ConnectionManager.GetHubContext<SearchHub>().Clients.Client(connectionId).progressChanged(url, status, errorMessage);
+            }
         }
 
         private void OnAppErrorEvent(ApplicationErrorEvent eventItem)
         {
             List<Type> eventTypeList;
-            if (_userGuidToEventDictionary.TryGetValue(eventItem.Guid, out eventTypeList) && eventTypeList.Contains(eventItem.GetType()))
-                _hub.OnAppError(eventItem);
+            if (!_userGuidToEventDictionary.TryGetValue(eventItem.Guid, out eventTypeList) ||
+                !eventTypeList.Contains(eventItem.GetType()))
+                return;
+
+            var guid = eventItem.Guid;
+            var connectionId = SearchHub.GuidDictionary[guid];
+            if (!SearchHub.GuidDictionary.ContainsKey(guid))
+                return;
+            GlobalHost.ConnectionManager.GetHubContext<SearchHub>().Clients.Client(connectionId).appError(eventItem.ErrorMessage);
         }
+
         public void Unsubscribe(Type eventType)
         {
-            EventBus.EventBus.Instance.Unsubscribe(eventsList.Find(x => x.EventItemType == eventType));
+            var token = eventsList.Find(x => x.EventItemType == eventType);
+            EventBus.EventBus.Instance.Unsubscribe(token);
+            eventsList.Remove(token);
         }
 
         public void Remove(string guid)

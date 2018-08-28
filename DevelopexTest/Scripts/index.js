@@ -39,7 +39,11 @@ $(function () {
     function initSignalR() {
         var connection = $.hubConnection();
         var searchHubProxy = connection.createHubProxy('searchHub');
+        searchHubProxy.on("progressChanged", onProgressChanged);
+        searchHubProxy.on("appError", onAppError);
+
         connection.qs = { "guid": $("#guid").val() }
+        connection.logging = true;
         connection.start({ pingInterval: 20000 });
         connection.disconnected(function () {
             setTimeout(function () {
@@ -48,15 +52,21 @@ $(function () {
             }, 5000);
         });
 
-        searchHubProxy.on("progressChanged", onProgressChanged);
-        searchHubProxy.on("appError", onAppError);
 
     }
 
     $("#search-form").on("submit", function (e) {
+
         resultTable.find(".alert").hide();
 
         resultTable.find("tbody").empty();
+    });
+
+    $("#cancel-btn").on("click", function (e) {
+        var guid = $("#guid").val();
+        $.post("api/cancel", { "": guid }, function(resp) {
+            resultTable.find(".alert").show().text("Search Canceled");
+        });
     });
 
     function onAppError(errorMessage) {

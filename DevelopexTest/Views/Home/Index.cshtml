@@ -12,26 +12,28 @@
 
                 <div class="form-group">
                     <label class="control-label">Start URL</label>
-                    <input class="form-control" name="StartUrl" type="text">
+                    <input class="form-control" name="StartUrl" type="url"
+                           placeholder="http://www.example.com" required>
                 </div>
                 <div class="form-group">
                     <label class="control-label">Max threads count</label>
-                    <input class="form-control" name="MaxThreadsCount" type="text">
+                    <input class="form-control" name="MaxThreadsCount" type="number" min="1" max="100" placeholder="Min: 1, max: 100" required>
                 </div>
                 <div class="form-group">
                     <label class="control-label">Text to search</label>
-                    <input class="form-control" name="TextToSearch" type="text">
+                    <input class="form-control" name="TextToSearch" type="text" placeholder="Type some word or phrase" required>
                 </div>
                 <div class="form-group">
                     <label class="control-label">Max URLs count</label>
-                    <input class="form-control" name="MaxUrlsCount" type="text">
+                    <input class="form-control" name="MaxUrlsCount" type="number" min="1" max="100000" placeholder="Min: 1, max: 100000" required>
                 </div>
-
                 <div class="form-group">
                     <input class="btn" type="submit" id="search-btn" value="Search!">
+                    <a class="btn" id="cancel-btn">Cancel</a>
                 </div>
 
             </form>
+
         </div>
         <div class="col-sm-6 col-xs-12">
             <h3>Search Result Table</h3>

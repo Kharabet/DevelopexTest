@@ -7,33 +7,19 @@ namespace DevelopexTest.Controllers
 {
     public class SearchController : ApiController
     {
-        // GET api/search
-        public IEnumerable<string> Get()
-        {
-            return new string[] { "value1", "value2" };
-        }
-
-        // GET api/search/5
-        public string Get(int id)
-        {
-            return "value";
-        }
-
         // POST api/search
         public void Post(SearchRequest request)
         {
             var webPageLinkParser = new WebPageLinkParser();
-            Task.Run(() => webPageLinkParser.Parse(request));
-        }
-        
-        // PUT api/search/5
-        public void Put(int id, [FromBody]string value)
-        {
-        }
 
-        // DELETE api/search/5
-        public void Delete(int id)
-        {
+            var ctProvider = new CancellationTokenProvider();
+
+            //UserGuid uses as User identifier. I didn't want to use authorization :)
+            //Collect users and their CancellationTokenSources 
+            ctProvider.Add(request.UserGuid);
+            var token = ctProvider.GetToken(request.UserGuid);
+
+            Task.Run(() => webPageLinkParser.Parse(request, token));
         }
     }
 }

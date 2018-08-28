@@ -28,7 +28,7 @@ namespace DevelopexTest.Models
 
         public ProducerConsumer(int workerCount)
         {
-            // Create and start a separate Task for each consumer:
+            // Create and start a separate Task for each consumer: (bad practise :-) )
             for (int i = 0; i < workerCount; i++)
                 Task.Factory.StartNew(Consume);
         }

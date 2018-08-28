@@ -184,6 +184,7 @@
     <Compile Include="App_Start\FilterConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
+    <Compile Include="Controllers\CancelController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\SearchController.cs" />
     <Compile Include="EventBus\Events\ApplicationErrorEvent.cs" />
@@ -198,7 +199,7 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
-    <Compile Include="Models\ITestProgressHolder.cs" />
+    <Compile Include="Models\CancellationTokenProvider.cs" />
     <Compile Include="Models\LinksQueueProvider.cs" />
     <Compile Include="Models\PriorityBlockingQueue.cs" />
     <Compile Include="Models\WebPageLinkParser.cs" />
@@ -207,7 +208,7 @@
     <Compile Include="Models\WebPage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SignalR\ProgressHolder.cs" />
-    <Compile Include="SignalR\SearchHub.cs" />
+    <Compile Include="SignalR\Hubs\SearchHub.cs" />
     <Compile Include="Startup.cs" />
   </ItemGroup>
   <ItemGroup>

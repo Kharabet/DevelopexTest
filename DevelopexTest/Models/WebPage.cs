@@ -65,7 +65,6 @@ namespace DevelopexTest.Models
             var html = client.DownloadString(url);
             var singleline = Regex.Replace(html, @"\r|\n", "").Trim();
 
-            // Download string.
             return singleline;
         }
 

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace DevelopexTest.Models
 {
+    //https://docs.microsoft.com/en-us/dotnet/standard/collections/thread-safe/how-to-add-bounding-and-blocking
 // Implementation of a priority queue that has bounding and blocking functionality.
     public class SimplePriorityQueue<TPriority, TValue> : IProducerConsumerCollection<KeyValuePair<int, TValue>>
     {
