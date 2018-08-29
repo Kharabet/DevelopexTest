@@ -17,6 +17,9 @@ namespace DevelopexTest.Models
 
     }
 
+    //Encapsulate work with web pages (inner link collecting, text searching)
+    //Not use libraries such as Html Agility pack. I Think it's cheating :)
+    //But for production better to use this library instead of workarounds in this class.
     public class WebPage
     {
         readonly string _text;

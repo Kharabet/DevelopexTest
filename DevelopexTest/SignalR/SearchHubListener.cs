@@ -4,19 +4,18 @@ using System.Collections.Generic;
 using System.Linq;
 using DevelopexTest.EventBus;
 using DevelopexTest.EventBus.Events;
-using DevelopexTest.Models;
 using DevelopexTest.SignalR.Hubs;
 using Microsoft.AspNet.SignalR;
 
 namespace DevelopexTest.SignalR
 {
-    public class ProgressHolder
+    public class SearchHubListener
     {
         private SearchHub _hub;
         private static ConcurrentDictionary<string, List<Type>> _userGuidToEventDictionary = new ConcurrentDictionary<string, List<Type>>();
         private static List<SubscriptionToken> eventsList = new List<SubscriptionToken>();
         private object _lockObj = new object();
-        public ProgressHolder(SearchHub hub)
+        public SearchHubListener(SearchHub hub)
         {
             _hub = hub;
         }

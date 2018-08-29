@@ -1,5 +1,4 @@
-﻿using System.Web;
-using System.Web.Optimization;
+﻿using System.Web.Optimization;
 
 namespace DevelopexTest
 {
@@ -10,16 +9,16 @@ namespace DevelopexTest
         {
             var cssCommon = new[]
             {
-                "~/Content/bootstrap.css",
+                "~/Content/bootstrap.min.css",
                 "~/Content/site.css",
             }; 
 
             var scriptsCommon = new[]
             {
             
-                 "~/Scripts/jquery-3.3.1.js",
-                "~/Scripts/jquery.signalR-2.3.0.js",
-                "~/Scripts/bootstrap.js",
+                 "~/Scripts/jquery-3.3.1.min.js",
+                "~/Scripts/jquery.signalR-2.3.0.min.js",
+                "~/Scripts/bootstrap.min.js",
                 "~/Scripts/index.js",
                 
             };

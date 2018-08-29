@@ -31,7 +31,8 @@ $(function () {
         Error: 4
     }
     var resultTable = $("#result-table"),
-        rowTemplate = '<tr data-url="{url}"><td class="url"><a href="{url}">{url}</a></td><td class="progress"><progress max="100" value="0"></progress></td><td class="status">{status}</td></tr>';
+        linkNumber = 0,
+        rowTemplate = '<tr data-url="{url}"><th scope="row" class="number-col">{linkNumber}</th><td class="url"><a href="{url}">{url}</a></td><td class="progress"><progress max="100" value="0"></progress></td><td class="status">{status}</td></tr>';
 
     resultTable.find(".alert").hide();
     initSignalR();
@@ -56,7 +57,7 @@ $(function () {
     }
 
     $("#search-form").on("submit", function (e) {
-
+        linkNumber = 0;
         resultTable.find(".alert").hide();
 
         resultTable.find("tbody").empty();
@@ -93,6 +94,8 @@ $(function () {
     }
 
     function addRow(data) {
+        linkNumber++;
+        data.linkNumber = linkNumber;
         resultTable.find("tbody").append(rowTemplate.supplant(data));
         var row = resultTable.find('tr[data-url="{0}"]'.format(data.url)),
             rowProgress = row.find('progress');

@@ -3,7 +3,10 @@
 <div class="container">
     <div class="jumbotron">
         <h1>URL Parser</h1>
+        <p class="lead">This app says whether given site (and sites linked inside it) contains such a word or not.</p>
+        <p class="lead">More info about implementation and architecture design find in comments to source code :)</p>
         <p class="lead">Enter input parametres and start search for specific word! Multithreading!</p>
+        <p class="lead">For testing we have to control shared sources(list, dictionaries etc.) to keep them thread safety (if not used collection from System.Collections.Concurrent). Prefer atomic operations to non-atomic. Prevent Threads from idle after finishing their work.</p>
     </div>
     <div class="row">
         <div class="col-sm-6 col-xs-12">
@@ -40,11 +43,12 @@
             <div id="result-table">
                 <div class="alert alert-danger"></div>
                 <table class="table" border="1">
-                    <thead>
+                    <thead class="thead-light">
                     <tr>
-                        <th class="url-col">Url</th>
-                        <th class="progress-col">Progress</th>
-                        <th class="status-col">Status</th>
+                        <th scope="col" class="number-col">#</th>
+                        <th scope="col" class="url-col">Url</th>
+                        <th scope="col" class="progress-col">Progress</th>
+                        <th scope="col" class="status-col">Status</th>
                     </tr>
                     </thead>
                     <tbody>

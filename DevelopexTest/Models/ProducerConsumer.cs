@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 
 namespace DevelopexTest.Models
 {
+    //represent producer consumer pattern
     public class ProducerConsumer
     {
         class WorkItem
